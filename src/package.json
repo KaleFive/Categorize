@@ -1,0 +1,15 @@
+{
+  "name": "category",
+  "version": "1.0.0",
+  "description": "load photo to S3, pass through rekognition, store in Dynamo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.100.0",
+    "bluebird": "^3.5.0"
+  }
+}
