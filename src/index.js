@@ -13,11 +13,34 @@ exports.handler = function(event, context, callback) {
   // let bucket = event.Records[0].s3.bucket.name;
   // let key = event.Records[0].s3.object.key;
   let bucket = "kalefive-alexa-deltoid"
-  let key = "cuteDog.jpeg"
-  rekognize(bucket, key);
+  let key = "happyCoupleStockImage.jpeg"
+  rekognizeFaces(bucket, key);
 };
 
-function rekognize(bucket, key) {
+function rekognizeFaces(bucket, key) {
+  let params = {
+    Attributes: ["ALL"],
+    Image: {
+      S3Object: {
+        Bucket: bucket,
+        Name: key
+      }
+    }
+  };
+
+  rekognition.detectFaces(params).promise()
+    .then(function(data) {
+      console.log("INSIDE next function");
+      console.log(data);
+      lambdaCallback(null, data)
+    }).catch(function(err) {
+      console.log("INSIDE reject function");
+      console.log(err);
+      lambdaCallback(err, null)
+    });
+};
+
+function rekognizeLabels(bucket, key) {
   let params = {
     Image: {
       S3Object: {
@@ -31,10 +54,6 @@ function rekognize(bucket, key) {
 
   rekognition.detectLabels(params).promise()
     .then(function(data) {
-      console.log("INSIDE resolve function");
-      console.log(data);
-      return data
-    }).then(function(data) {
       console.log("INSIDE next function");
       console.log(data);
       lambdaCallback(null, data)
