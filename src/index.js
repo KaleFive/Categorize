@@ -3,8 +3,7 @@ let s3 = new AWS.S3({apiVersion: "2006-03-01"});
 let rekognition = new AWS.Rekognition();
 let docClient = new AWS.DynamoDB.DocumentClient();
 
-AWS.config.setPromisesDependency(require('bluebird'));
-let lambdaCallback;
+let lambdaCallback, bucket, key;
 
 exports.handler = function(event, context, callback) {
   // console.log("Inside Category handler function");
@@ -13,31 +12,45 @@ exports.handler = function(event, context, callback) {
   // Get the object from the event and show its content type
   // let bucket = event.Records[0].s3.bucket.name;
   // let key = event.Records[0].s3.object.key;
-  let bucket = "kalefive-alexa-deltoid"
-  let key = "happyCoupleStockImage.jpeg"
-  rekognizeFaces(bucket, key)
-  console.log("after all promise");
+  bucket = "kalefive-alexa-deltoid"
+  key = "sadHeadshot.jpg"
+  rekognizeFace(bucket, key)
+    .then(function(faceAttributes) {
+      return addToFacesTable(faceAttributes)
+    }).then(function(data) {
+      console.log("Data added to Face Table");
+      lambdaCallback(null, data)
+    }).catch(function(err) {
+      lambdaCallback(err, null);
+    });
 };
 
 function addToFacesTable(faceAtt) {
-  console.log("inside Add to FACES table function")
+  let emotions = faceAtt["FaceDetails"][0]["Emotions"];
+  let ageRange = faceAtt["FaceDetails"][0]["AgeRange"];
+  let gender = faceAtt["FaceDetails"][0]["Gender"];
+
   let params = {
-    TableName: "Faces",
+    TableName: "facesV2",
     Item: {
       faceId: 1,
-      attribute: "hello",
-      Random: "test"
+      filename: key.split(".")[0],
+      timestamp: new Date().getTime(),
+      emotionType1: emotions[0].Type,
+      emotionConf1: emotions[0].Confidence,
+      emotionType2: emotions[1].Type,
+      emotionConf2: emotions[1].Confidence,
+      ageLow: ageRange.Low,
+      ageHigh: ageRange.High,
+      genderValue: gender.Value,
+      genderConf: gender.Confidence
     }
   };
 
-  docClient.put(params, function(err, data) {
-    if (err) console.log(err);
-    else console.log(data)
-    lambdaCallback(null, data)
-  });
+  return docClient.put(params).promise()
 };
 
-function rekognizeFaces(bucket, key) {
+function rekognizeFace(bucket, key) {
   let params = {
     Attributes: ["ALL"],
     Image: {
@@ -48,21 +61,7 @@ function rekognizeFaces(bucket, key) {
     }
   };
 
-  rekognition.detectFaces(params).promise()
-    .then(function(data) {
-      console.log("INSIDE next function");
-      // lambdaCallback(null, data)
-      return data
-    }).then(function(faceAttributes) {
-      console.log(faceAttributes);
-      console.log("right before addToFacesTable");
-      addToFacesTable(faceAttributes)
-      console.log("right after addToFacesTable");
-    }).catch(function(err) {
-      console.log("INSIDE reject function");
-      console.log(err);
-      lambdaCallback(err, null)
-    });
+  return rekognition.detectFaces(params).promise()
 };
 
 function rekognizeLabels(bucket, key) {
