@@ -6,17 +6,17 @@ let docClient = new AWS.DynamoDB.DocumentClient();
 let lambdaCallback, bucket, key;
 
 exports.handler = function(event, context, callback) {
-  // console.log("Inside Category handler function");
   // console.log("Received event:", JSON.stringify(event, null, 2));
   lambdaCallback = callback
-  // Get the object from the event and show its content type
-  // let bucket = event.Records[0].s3.bucket.name;
-  // let key = event.Records[0].s3.object.key;
-  bucket = "kalefive-alexa-deltoid"
-  key = "sadHeadshot.jpg"
-  rekognizeFace(bucket, key)
-    .then(function(faceAttributes) {
-      return addToFacesTable(faceAttributes)
+  bucket = event.Records[0].s3.bucket.name;
+  key = event.Records[0].s3.object.key;
+  rekognizeLabels(bucket, key)
+    .then(function(data) {
+      labelData = data["Labels"];
+      return rekognizeFace(bucket, key)
+    }).then(function(faceData) {
+      faceDetails = faceData["FaceDetails"];
+      return addToFacesTable()
     }).then(function(data) {
       console.log("Data added to Face Table");
       lambdaCallback(null, data)
@@ -25,13 +25,17 @@ exports.handler = function(event, context, callback) {
     });
 };
 
-function addToFacesTable(faceAtt) {
-  let emotions = faceAtt["FaceDetails"][0]["Emotions"];
-  let ageRange = faceAtt["FaceDetails"][0]["AgeRange"];
-  let gender = faceAtt["FaceDetails"][0]["Gender"];
+function addToFacesTable() {
+  let labels = []
+  labelData.forEach(function(label) {
+    labels.push(label.Name)
+  });
+  let emotions = faceDetails[0]["Emotions"];
+  let ageRange = faceDetails[0]["AgeRange"];
+  let gender = faceDetails[0]["Gender"];
 
   let params = {
-    TableName: "facesV2",
+    TableName: "facesV3",
     Item: {
       faceId: 1,
       filename: key.split(".")[0],
@@ -43,7 +47,8 @@ function addToFacesTable(faceAtt) {
       ageLow: ageRange.Low,
       ageHigh: ageRange.High,
       genderValue: gender.Value,
-      genderConf: gender.Confidence
+      genderConf: gender.Confidence,
+      labels: labels
     }
   };
 
@@ -72,18 +77,9 @@ function rekognizeLabels(bucket, key) {
         Name: key
       }
     },
-    MaxLabels: 10,
+    MaxLabels: 3,
     MinConfidence: 80
   };
 
-  rekognition.detectLabels(params).promise()
-    .then(function(data) {
-      console.log("INSIDE next function");
-      console.log(data);
-      lambdaCallback(null, data)
-    }).catch(function(err) {
-      console.log("INSIDE reject function");
-      console.log(err);
-      lambdaCallback(err, null)
-    });
+  return rekognition.detectLabels(params).promise()
 };
