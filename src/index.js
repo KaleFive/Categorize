@@ -1,3 +1,4 @@
+let config = require("config");
 let AWS = require("aws-sdk");
 let s3 = new AWS.S3({apiVersion: "2006-03-01"});
 let rekognition = new AWS.Rekognition();
@@ -6,7 +7,6 @@ let docClient = new AWS.DynamoDB.DocumentClient();
 let lambdaCallback, bucket, key;
 
 exports.handler = function(event, context, callback) {
-  // console.log("Received event:", JSON.stringify(event, null, 2));
   lambdaCallback = callback
   bucket = event.Records[0].s3.bucket.name;
   key = event.Records[0].s3.object.key;
@@ -18,7 +18,7 @@ exports.handler = function(event, context, callback) {
       faceDetails = faceData["FaceDetails"];
       return addToFacesTable()
     }).then(function(data) {
-      console.log("Data added to Face Table");
+      console.log("Data added to " + config.tableName + " Table");
       lambdaCallback(null, data)
     }).catch(function(err) {
       lambdaCallback(err, null);
@@ -35,7 +35,7 @@ function addToFacesTable() {
   let gender = faceDetails[0]["Gender"];
 
   let params = {
-    TableName: "facesV3",
+    TableName: config.tableName,
     Item: {
       faceId: 1,
       filename: key.split(".")[0],
