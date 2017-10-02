@@ -5,7 +5,7 @@ A lambda function to pull S3 image upon upload, running image through AWS Rekogn
 
 After creating a lambda function grab the zip version of this code by running
 ```
-zip -r ../../categorize.zip *
+zip -r ../../lambda_categorize.zip *
 ```
 Then upload this zip file to your new lambda function.
 
