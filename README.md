@@ -11,3 +11,6 @@ zip -r ../../lambda_categorize.zip *
 Then upload this zip file to your new lambda function.
 
 ![categorize](https://user-images.githubusercontent.com/11951665/31162182-ddc7bafa-a8a9-11e7-830d-47a052c914cd.jpg)
+
+## Medium Article on implementation
+https://medium.com/@Kalefive/https-medium-com-kalefive-using-aws-rekognition-and-lambda-to-analyze-images-on-the-fly-61cd1adae0af
