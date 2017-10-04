@@ -18,7 +18,7 @@ exports.handler = function(event, context, callback) {
       faceDetails = faceData["FaceDetails"];
       return addToFacesTable()
     }).then(function(data) {
-      console.log("Data added to " + config.tableName + " Table");
+      console.log("Data added to " + config.dynamo.tableName + " Table");
       lambdaCallback(null, data)
     }).catch(function(err) {
       lambdaCallback(err, null);
@@ -35,7 +35,7 @@ function addToFacesTable() {
   let gender = faceDetails[0]["Gender"];
 
   let params = {
-    TableName: config.tableName,
+    TableName: config.dynamo.tableName,
     Item: {
       faceId: 1,
       filename: key.split(".")[0],

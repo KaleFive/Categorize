@@ -1,5 +1,7 @@
 let config = {}
 
-config.tableName = "facesV3"
+config.dynamo = {}
+
+config.dynamo.tableName = "facesV3"
 
 module.exports = config
