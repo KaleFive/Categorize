@@ -9,3 +9,5 @@ Grab the zip version of this code by `cd`-ing into the `src` directory and runni
 zip -r ../../lambda_categorize.zip *
 ```
 Then upload this zip file to your new lambda function.
+
+![categorize](https://user-images.githubusercontent.com/11951665/31162182-ddc7bafa-a8a9-11e7-830d-47a052c914cd.jpg)
